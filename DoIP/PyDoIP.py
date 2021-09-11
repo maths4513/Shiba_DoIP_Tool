@@ -66,8 +66,8 @@ payloadTypeDescription = {
 }
 
 # to be changed later as an option in terminal
-defaultTargetIPAddr = '172.26.200.101'
-defaultTargetECUAddr = '2004'
+defaultTargetIPAddr = '192.168.0.33'
+defaultTargetECUAddr = '0200' #0x0200
 
 def PadHexwithLead0s(hexStr):
     if isinstance (hexStr, str): # Make sure input argument is string
@@ -99,7 +99,7 @@ class DoIP_Client:
         self._targetECUAddr = None
         self._isTCPConnected = False
         self._isRoutingActivated = False
-        self._isVerbose = False
+        self._isVerbose = True
         self._TxDoIPMsg = DoIPMsg()
         self._RxDoIPMsg = DoIPMsg()
         self._logHndl = open('flash.log', 'w+')
@@ -126,7 +126,7 @@ class DoIP_Client:
     def __enter__(self):
         return self
 
-    def ConnectToDoIPServer(self, address=defaultTargetIPAddr, port=13400, routingActivation=True, targetECUAddr= '2004'):
+    def ConnectToDoIPServer(self, address=defaultTargetIPAddr, port=13400, routingActivation=True, targetECUAddr= '512'):
         if self._isTCPConnected:
             print "Error :: Already connected to a server. Close the connection before starting a new one\n"
         else:
@@ -202,14 +202,19 @@ class DoIP_Client:
                 if not targetECUAddr:
                     targetECUAddr = self._targetECUAddr
                 DoIPHeader = PROTOCOL_VERSION + INVERSE_PROTOCOL_VERSION + DOIP_ROUTING_ACTIVATION_REQUEST
-                payload = localECUAddr + activationType + ASRBISO + ASRBOEM
+                #payload = localECUAddr + activationType + ASRBISO + ASRBOEM
+                payload = localECUAddr + activationType + ASRBISO 
                 payloadLength = "%.8X" % (len(payload) / 2)  # divide by 2 because 2 nibbles per byte
                 activationString = DoIPHeader + payloadLength + payload
+                print "activationString is ",activationString
                 self._TxDoIPMsg.UpdateMsg(activationString, self._isVerbose)
                 print "Requesting routing activation..."
                 if self._isVerbose:
                     print "TCP SEND ::"
                     self._TxDoIPMsg.PrintMessage()
+                    
+                    
+                
                 self._TCP_Socket.send(activationString.decode("hex"))
                 activationResponse = (binascii.hexlify(self._TCP_Socket.recv(2048))).upper()
                 if self._isVerbose:
@@ -442,8 +447,9 @@ def DoIP_Routine_Control(subfunction, routine, op, verbose=False):
             print "Can not connect to DoIP Server."
     else:
         print "TCP Socket creation failed."
-
-def DoIP_Flash_Hex(componentID, ihexFP, hostECUAddr = '1111', serverECUAddr = '2004',targetIP='172.26.200.101', verbose=False, multiSegment=True):
+#doip entity: 0x0200 512
+#doip tester: 0x0e00 3584
+def DoIP_Flash_Hex(componentID, ihexFP, hostECUAddr = '0e00', serverECUAddr = '0200',targetIP='192.168.0.33', verbose=False, multiSegment=True):
 	# get necessary dependencies
 	import progressbar
 
@@ -780,9 +786,9 @@ def main():
 
 	optional.add_argument("-hexfile", nargs = 1, type = str, help = "Full path to hexfile")
 	optional.add_argument("-blockID", nargs = 1, default = ['2'], type = str, help = "Target memory region to flash to : 0)BL, 1)CAL, 2)APP. Default: 2")
-	optional.add_argument("-clientID", nargs = 1, default = ['1111'] ,type = str, help = "Host ECU id to flash from in hex format, i.e. 1111 will be read as 0x1111. Default: 1111")
-	optional.add_argument("-serverID", nargs =1, default = ['2004'],type = str, help = "Target ECU id to flash to in hex format, i.e. 2004 will be read as 0x2004. Default: 2004")
-	optional.add_argument("-targetIP", nargs = 1,default = ['172.26.200.101'], type = str, help = "Target IP address of ECU, e.g. 192.168.7.2. Default: 172.26.200.101")
+	optional.add_argument("-clientID", nargs = 1, default = ['0e00'] ,type = str, help = "Host ECU id to flash from in hex format, i.e. 1111 will be read as 0x1111. Default: 1111")
+	optional.add_argument("-serverID", nargs =1, default = ['0200'],type = str, help = "Target ECU id to flash to in hex format, i.e. 2004 will be read as 0x2004. Default: 2004")
+	optional.add_argument("-targetIP", nargs = 1,default = ['192.168.0.33'], type = str, help = "Target IP address of ECU, e.g. 192.168.7.2. Default: 172.26.200.101")
 	optional.add_argument("-sessionID", nargs = 1,default = ['1'], type = str, help = "Diagnostic session: 1) defaultsession, 2) programming, 3) extended. Default: 1")
 	optional.add_argument("-v", "--verbose", help="Set verbosity. Default: false", action="store_true")
 	optional.add_argument("-sb", "--singleBlock", help="Set single block download. Default: false (multi-block download)", action="store_true")
