@@ -646,7 +646,8 @@ def DoIP_Flash_Hex(componentID, ihexFP, hostECUAddr = '0e00', serverECUAddr = '0
 
 								print "Switching to default diagnostic session..."
 								print "\tWarning :: ECU will reset"
-								if DoIPClient._DoIPUDSSend(PyUDS.DSC + PyUDS.DS) == 0:
+								if DoIPClient.DoIPSwitchDiagnosticSession(PyUDS.DS) == 0:
+								#if DoIPClient._DoIPUDSSend(PyUDS.DSC + PyUDS.DS) == 0:
 									print "Successfully switched to default diagnostic session\n"
 									print "Software update success!!\n"
 
@@ -666,6 +667,7 @@ def DoIP_Flash_Hex(componentID, ihexFP, hostECUAddr = '0e00', serverECUAddr = '0
 							print "Error during post transfer operations.\n"
 
 						# disconnect from the server gracefully please
+						time.sleep(5)
 						print "Exiting out of flash sequence...\n"
 						DoIPClient.DisconnectFromDoIPServer()
 						time.sleep(5)
