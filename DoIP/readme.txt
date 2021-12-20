@@ -1,0 +1,1 @@
+python PyDoIP.py --flash -hexfile tricore_397_arccore_app_align32.hex -v
